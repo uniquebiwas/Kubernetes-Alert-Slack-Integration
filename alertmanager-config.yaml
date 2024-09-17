@@ -1,0 +1,37 @@
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+      # Update this to your actual Slack webhook URL
+      slack_api_url: "https://hooks.slack.com/services/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"
+    route:
+      group_by: ['job']
+      group_wait: 30s
+      group_interval: 1m
+      repeat_interval: 12h
+      # Default receiver to handle everything else
+      receiver: 'slack'
+      routes:
+      - match:
+          alertname: InstanceLowMemory
+          severity: critical
+        receiver: 'slack'  # Send InstanceLowMemory to Slack
+      - match:
+          alertname: PodDown
+          severity: critical
+        receiver: 'slack'  # Send PodDown alerts to Slack
+
+    receivers:
+    - name: 'slack'
+      slack_configs:
+      - channel: '#devops-help'
+        send_resolved: false #set true if you want alert after resolved also
+        title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] Alerts Notification'
+        text: >-
+          {{ range .Alerts }}
+            *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`  
+            *Description:* {{ .Annotations.description }}
+            *Details:*  
+            {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`  
+            {{ end }}
+          {{ end }}

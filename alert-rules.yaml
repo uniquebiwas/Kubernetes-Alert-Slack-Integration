@@ -1,0 +1,24 @@
+additionalPrometheusRules: 
+  - name: my-rule-file
+    groups:
+    - name: AllInstances
+      rules:
+      - alert: InstanceLowMemory
+        expr: :node_memory_MemAvailable_bytes:sum < 10668858390
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.host }}: memory low"
+          description: "{{ $labels.host }} has less than 10G memory available"
+    groups:
+    - name: pod-down-alerts
+      rules:
+      - alert: PodDown
+        expr: kube_pod_status_ready{condition="false"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod {{ $labels.pod }} is down"
+          description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} has been down for more than 1 minutes."
